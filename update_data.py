@@ -3,8 +3,9 @@ import requests
 import time
 import json
 
-# Download cardbase flag (DEBUG)
+# Download flags (DEBUG)
 dl_cb = False
+dl_cl = False
 
 # API endpoint for bulk cards (Oracle cards)
 bulk_uri = "https://api.scryfall.com/bulk-data/oracle-cards"
@@ -15,10 +16,10 @@ wait_time = 1
 # Cardbase filename
 filename = "cardbase.json"
 
-# Add delay before any requests to prevent excessive requests
-time.sleep(wait_time)
-
 if dl_cb:
+    # Add delay before any requests to prevent excessive requests
+    time.sleep(wait_time)
+
     # Make a request for bulk cards
     print(f"Making bulk request @ [{bulk_uri}]")
     bulk_response = requests.get(bulk_uri)
@@ -59,36 +60,31 @@ catalog_type_uris = {
 filename = "catalog.json"
 
 # Create a dictionary to contain catalog data
-catalog = {
-    "supertypes": [],
-    "card_types": [],
-    "subtypes": {
-        "artifact_types":[],
-        "battle_types":[],
-        "creature_types":[],
-        "enchantment_types":[],
-        "land_types":[],
-        "planeswalker_types":[],
-        "spell_types":[]
-    }
-}
+catalog = {}
 
-# Add delay between requests to prevent excessive requests
-time.sleep(wait_time)
-
-# Function to make catalog fetches
-def catalog_fetch(dict: dict, name: str, wait_time: int = 1):
-    uri = dict[name]
-    print(f"Making {name} catalog request @ [{uri}]")
+if dl_cl:
+    # Add delay between requests to prevent excessive requests
     time.sleep(wait_time)
-    return list(requests.get(uri).json()["data"])
 
-# Get supertype catalog and card type catalog
-catalog["supertypes"] = catalog_fetch(catalog_type_uris, "supertypes", wait_time)
-catalog["card_types"] = catalog_fetch(catalog_type_uris, "card_types", wait_time)
+    # Function to make catalog fetches
+    def catalog_fetch(dict: dict, name: str, wait_time: int = 1):
+        uri = dict[name]
+        print(f"Making {name} catalog request @ [{uri}]")
+        time.sleep(wait_time)
+        return list(requests.get(uri).json()["data"])
 
-# Get subtype catalogs
-for subtype in catalog["subtypes"]:
-    # TODO
-    pass
-    
+    # Get supertype catalog and card type catalog
+    catalog["supertypes"] = catalog_fetch(catalog_type_uris, "supertypes", wait_time)
+    catalog["card_types"] = catalog_fetch(catalog_type_uris, "card_types", wait_time)
+
+    # Get subtype catalogs
+    subtypes = []
+    for subtype, uri in catalog_type_uris["subtypes"].items():
+        subtypes += catalog_fetch(catalog_type_uris["subtypes"], subtype, wait_time)
+
+    catalog["subtypes"] = subtypes
+
+    with open(filename, "w") as file:
+        json.dump(catalog, file)
+else:
+    print("Skipping catalog downloads (Set dl_cl to True to download the catalogs).")
