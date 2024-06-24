@@ -4,8 +4,8 @@ import time
 import json
 
 # Download flags (DEBUG)
-dl_cb = False
-dl_cl = False
+dl_cb = True
+dl_cl = True
 
 # API endpoint for bulk cards (Oracle cards)
 bulk_uri = "https://api.scryfall.com/bulk-data/oracle-cards"
